@@ -1,0 +1,141 @@
+create hive external table
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS temp_1225_1500_ChannelCallAdv (
+    sourceId int,
+    callAdvTime string,
+    orderId int,
+    orderInputId int,
+    source string,
+    landingPageId int,
+    uuid string,
+    from_ip string,
+    sc_name string,
+    delMode string,
+    repeatTime int,
+    version int,
+    host string,
+    client_ip string,
+    logger_name string,
+    scid string,
+    responseMsg string,
+    orderSourceId int,
+    level string,
+    channelTime string,
+    advId int,
+    clickTime string,
+    message string,
+    callAdvUrl string,
+    ideaId int,
+    tags array<string>,
+    time_stamp date,
+    port int,
+    thread_name string,
+    level_value int,
+    appid string,
+    proId int,
+    callChannelUrl string,
+    delPlat string,
+    status int,
+    cid string
+    )
+    
+    
+    
+    
+    COMMENT 'c ChannelCallAdv details'
+    ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
+    stored as TEXTFILE;
+    
+    
+--    STORED AS SEQUENCEFILE;
+--    stored as rcfile;
+    
+--     ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'    
+--    STORED AS TEXTFILE;
+    
+    --设置压缩 
+SET hive.exec.compress.output=true; 
+SET mapred.compress.map.output=true; 
+SET mapred.output.compress=true; 
+SET mapred.output.compression=org.apache.hadoop.io.compress.SnappyCodec; 
+SET mapred.output.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+set mapred.output.compression.type=BLOCK;
+SET io.compression.codecs=org.apache.hadoop.io.compress.SnappyCodec; 
+
+
+
+
+CREATE EXTERNAL TABLE IF NOT EXISTS 1225_1500_ChannelCallAdv (
+    sourceId int,
+    callAdvTime string,
+    orderId int,
+    orderInputId int,
+    source string,
+    landingPageId int,
+    uuid string,
+    from_ip string,
+    sc_name string,
+    delMode string,
+    repeatTime int,
+    version int,
+    host string,
+    client_ip string,
+    logger_name string,
+    scid string,
+    responseMsg string,
+    orderSourceId int,
+    level string,
+    channelTime string,
+    advId int,
+    clickTime string,
+    message string,
+    callAdvUrl string,
+    ideaId int,
+    tags array<string>,
+    time_stamp date,
+    port int,
+    thread_name string,
+    level_value int,
+    appid string,
+    proId int,
+    callChannelUrl string,
+    delPlat string,
+    status int,
+    cid string
+    )
+    COMMENT 'c ChannelCallAdv details'
+    PARTITIONED BY (channelType string, log_type string)
+    ROW FORMAT SERDE 'org.apache.hive.hcatalog.data.JsonSerDe'
+    stored as SEQUENCEFILE;
+
+
+
+
+
+
+
+LOAD DATA INPATH 'hdfs:/2017-12-05/logstash-2017-12-05.snappy' OVERWRITE INTO TABLE temp_1225_1500_ChannelCallAdv;
+
+
+insert into table 1225_1500_ChannelCallAdv PARTITION (channelType='CPC', log_type='ChannelCallAdv') select sourceid,calladvtime,orderid,orderinputid,source,landingpageid,uuid,from_ip,sc_name,delmode,repeattime,version,host,client_ip,logger_name,scid,responsemsg,ordersourceid,level,channeltime,advid,clicktime,message,calladvurl,ideaid,tags,time_stamp,port,thread_name,level_value,appid,proid,callchannelurl,delplat,status,cid from temp_1225_1500_ChannelCallAdv;    
+
+    
+--load json data from HDFS    
+    
+LOAD DATA INPATH 'hdfs:/hive/warehouse/jc.db/final_channelcalladv/channeltype=CPC/log_type=ChannelCallAdv/000000_0' OVERWRITE INTO TABLE  load_ChannelCallAdv  PARTITION (channelType='CPC', log_type='ChannelCallAdv');
+
+
+插入数据
+
+insert into table wal_ChannelCallAdv PARTITION (channelType='CPC', log_type='ChannelCallAdv') select * from walden_ChannelCallAdv;
+
+insert into table wal_ChannelCallAdv PARTITION (channelType='CPC', log_type='ChannelCallAdv') select sourceid,calladvtime,orderid,orderinputid,source,landingpageid,uuid,from_ip,sc_name,delmode,repeattime,version,host,client_ip,logger_name,scid,responsemsg,ordersourceid,level,channeltime,advid,clicktime,message,calladvurl,ideaid,tags,time_stamp,port,thread_name,level_value,appid,proid,callchannelurl,delplat,status,cid from jc.sun_channelcalladv;
+
+
+    ROW FORMAT SERDE 'org.openx.data.jsonserde.JsonSerDe'
+    
+    
+    --忽略坏数据
+
+    ALTER TABLE cChannelCallAdv SET SERDEPROPERTIES ( "ignore.malformed.json" = "true");

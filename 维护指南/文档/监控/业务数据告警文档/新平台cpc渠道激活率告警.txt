@@ -1,0 +1,96 @@
+{
+  "trigger": {
+    "schedule": {
+      "cron": "0 0 11 * * ?"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "jc-*"
+        ],
+        "types": [],
+        "body": {
+          "size": 0,
+          "query": {
+            "bool": {
+              "must": {
+                "range": {
+                  "@timestamp": {
+                    "gte": "now-24h/h",
+                    "lte": "now",
+                    "time_zone": "+00:00"
+                  }
+                }
+              },
+              "filter": {
+                "query_string": {
+                  "query": "(log_type:(AdvConfirm|ChannelClick) AND (channelType:CPC))"
+                }
+              }
+            }
+          },
+          "aggs": {
+            "group_by_app": {
+              "terms": {
+                "field": "appid.keyword"
+              },
+              "aggs": {
+                "group_by_source": {
+                  "terms": {
+                    "field": "source.keyword",
+                    "size": 50
+                  },
+                  "aggs": {
+                    "group_by_logtype": {
+                      "terms": {
+                        "field": "log_type.keyword"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "script": {
+      "source": "def number_orders = ctx.payload.aggregations.group_by_app.buckets?.size();def activers = new HashMap();def clickers = new HashMap();def rates = new HashMap();for (def i = 0; i < number_orders; i++) {    def order = ctx.payload.aggregations.group_by_app.buckets[i].key;    def number_sources = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets?.size();  for (def j = 0; j < number_sources; j++) {     def number_logtype = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].group_by_logtype.buckets?.size();    def source = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].key;  def order_key = order + source;    double rate;    if (number_logtype === 1 )      {        rate = 0.0      }     else {       double activer = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].group_by_logtype.buckets.1.doc_count;      double clicker = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].group_by_logtype.buckets.0.doc_count;      rate = activer / clicker;       if ( rate !== 0 && (rate < params.lw || rate > params.hg) )       {         activers[order_key] = activer;        clickers[order_key] = clicker;        rates[order_key] = rate;       }     }  } } rates !== [];",
+      "lang": "painless",
+      "params": {
+        "lw": 0.0001,
+        "hg": 0.001
+      }
+    }
+  },
+  "actions": {
+    "email_admin": {
+      "email": {
+        "profile": "standard",
+        "from": "bo.zhang@jcmob.net",
+        "to": [
+          "bo.zhang@jcmob.net"
+        ],
+        "subject": "J&C source activate rate with CPC is out of range",
+        "body": {
+          "text": "The active rate is {{ctx.payload}}  is less than 1%% or more than 10%%"
+        }
+      }
+    }
+  },
+  "transform": {
+    "script": {
+      "source": "def number_orders = ctx.payload.aggregations.group_by_app.buckets?.size();def activers = new HashMap();def clickers = new HashMap();def rates = new HashMap();def active_rates = new HashMap();for (def i = 0; i < number_orders; i++) {    def order = ctx.payload.aggregations.group_by_app.buckets[i].key;    def number_sources = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets?.size();  for (def j = 0; j < number_sources; j++) {     def number_logtype = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].group_by_logtype.buckets?.size();    def source = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].key;  def order_key = order + ',' + source;    double rate;    if (number_logtype === 1 )      {        rate = 0.0      }     else {       double activer = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].group_by_logtype.buckets.1.doc_count;      double clicker = ctx.payload.aggregations.group_by_app.buckets[i].group_by_source.buckets[j].group_by_logtype.buckets.0.doc_count;      rate = activer / clicker * 10000;       if ( rate !== 0 && (rate < params.lwr || rate > params.hgr) )       {         activers[order_key] = activer;        clickers[order_key] = clicker;       def active_rate = rate.toString() + '%%';      active_rates[order_key] = active_rate;       }     }  } } return active_rates;",
+      "lang": "painless",
+      "params": {
+        "hgr": 10,
+        "lwr": 1
+      }
+    }
+  }
+}

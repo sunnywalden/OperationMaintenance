@@ -1,0 +1,38 @@
+一、快照存储到NFS
+curl -XPUT 'http://10.61.8.15:9200/_snapshot/my_backup' -d '{
+    "type": "fs",
+    "settings": {
+        "location": "/data/backups/my_backup/demo",
+        "compress": true
+    }
+}'
+
+
+curl -XPUT "10.61.8.15:9200/_snapshot/my_backup/snapshot_1117" -d '{
+    "indices": "logstash-2017.11.17",
+    "ignore_unavailable": "true",
+    "include_global_state": false,
+    "partial": "false"
+}'
+
+curl -XGET "10.61.8.15:9200/_snapshot/my_backup/snapshot_1117"
+
+
+
+
+
+
+二、快照存储到hdfs
+curl -XPUT '10.61.8.15:9200/_snapshot/hdfs_backup' -d '{
+"type":"hdfs",
+"settings":{
+"path":"/es_output/reposite",
+"uri":"hdfs://10.61.8.21:9000",
+"compress": true
+}
+}'
+
+
+curl -XPUT 'http://10.61.8.15:9200/_snapshot/hdfs_backup/snapshot_11_19' -d '{
+"indices":"logstash-2017.11.19"
+}'

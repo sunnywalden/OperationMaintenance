@@ -1,0 +1,6 @@
+MySQL删除数据与磁盘空间清理
+1.删除数据
+delete from cas_user_click_v2 where insertTime<='2018-01-01 00:00:00'; 
+
+2.清理磁盘
+OPTIMIZE TABLE cas_call_adv_v2;

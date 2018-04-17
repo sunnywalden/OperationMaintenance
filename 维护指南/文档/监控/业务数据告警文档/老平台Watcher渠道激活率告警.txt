@@ -1,0 +1,96 @@
+{
+  "trigger": {
+    "schedule": {
+      "cron": "0 0 11 * * ?"
+    }
+  },
+  "input": {
+    "search": {
+      "request": {
+        "search_type": "query_then_fetch",
+        "indices": [
+          "logstash-*"
+        ],
+        "types": [],
+        "body": {
+          "size": 0,
+          "query": {
+            "bool": {
+              "must": {
+                "range": {
+                  "@timestamp": {
+                    "gte": "2018-01-01T00:00:00.000Z",
+                    "lte": "2018-01-02T00:00:00.000Z",
+                    "time_zone": "+00:00"
+                  }
+                }
+              },
+              "filter": {
+                "query_string": {
+                  "query": "(log_type:(clickNumber|advAckAllNumber))"
+                }
+              }
+            }
+          },
+          "aggs": {
+            "group_by_app": {
+              "terms": {
+                "field": "appid.keyword"
+              },
+              "aggs": {
+                "group_by_source": {
+                  "terms": {
+                    "field": "source.keyword",
+                    "size": 50
+                  },
+                  "aggs": {
+                    "group_by_logtype": {
+                      "terms": {
+                        "field": "log_type.keyword"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "condition": {
+    "script": {
+      "source": "def len_th = ctx.payload.aggregations.group_by_app.buckets?.size();double rate = 0.0;def rates = new HashMap();def lt = 0;for (def i = 0; i < len_th; i++) {  lt = ctx.payload.aggregations.group_by_app.buckets[i].group_by_logtype.buckets.length; if (lt === 1 )  {  rate = 0.0  } else { rate = ctx.payload.aggregations.group_by_app.buckets[i].group_by_logtype.buckets.1.doc_count / ctx.payload.aggregations.group_by_app.buckets[i].group_by_logtype.buckets.0.doc_count  } if ( rate < params.lw || rate > params.hg ) { rates[ctx.payload.aggregations.group_by_app.buckets[i].key] = rate }  }  return rates !== [] ;",
+      "lang": "painless",
+      "params": {
+        "lw": 0.0001,
+        "hg": 0.0005
+      }
+    }
+  },
+  "actions": {
+    "email_admin": {
+      "email": {
+        "profile": "standard",
+        "from": "bo.zhang@jcmob.net",
+        "to": [
+          "sunnywalden@gmail.com"
+        ],
+        "subject": "J&C source activate rate is out of range",
+        "body": {
+          "text": "The active rate is {{ctx.payload}}  is less than 1%% or more than 5%%"
+        }
+      }
+    }
+  },
+  "transform": {
+    "script": {
+      "source": "def len_th = ctx.payload.aggregations.group_by_app.buckets?.size();double rate = 0.0;def activers = new HashMap();def clickers = new HashMap();def rates = new HashMap();def lts = new HashMap();def lt = 0;for (def i = 0; i < len_th; i++) {  def keyer = ctx.payload.aggregations.group_by_app.buckets[i].key;lt = ctx.payload.aggregations.group_by_app.buckets[i].group_by_logtype.buckets.length;lts[keyer] = lt;if (lt === 1 )  {  rate = 0.0  } else { double activer = ctx.payload.aggregations.group_by_app.buckets[i].group_by_logtype.buckets.1.doc_count;double clicker = ctx.payload.aggregations.group_by_app.buckets[i].group_by_logtype.buckets.0.doc_count;rate = activer / clicker; if ( rate !== 0 && (rate < params.lwr || rate > params.hgr) ) { activers[keyer] = activer;clickers[keyer] = clicker;rates[keyer] = rate } } } return rates;",
+      "lang": "painless",
+      "params": {
+        "hgr": 0.0005,
+        "lwr": 0.0001
+      }
+    }
+  }
+}

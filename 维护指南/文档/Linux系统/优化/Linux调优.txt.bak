@@ -1,0 +1,39 @@
+一、最大文件数
+1.ulimit设置
+系统默认支持的同一shell会话可访问的文件资源数有限，当系统有大量、频繁的文件操作时，可能导致当前会话的可用文件资源数超过限制，导致服务异常，需要设置ulimit。
+操作：
+修改/etc/security/limits.conf,增加如下内容
+
+#Provides control over the resources available to the shell and to processes started by it, on systems that allow  such control.
+* soft nofile 655350
+* hard nofile 655360
+
+
+2.fs.file-max设置
+如果发现服务异常，有大量文件句柄错误，就需要通过fs.file-max值的调整增加系统层支持的最大文件数
+操作：
+修改/etc/sysctl.conf文件，增加如下内容
+#system-wide limit on the number of open files for all processes
+fs.file-max = 65535
+
+
+二、最大进程或线程数
+1.ulimit -u设置
+通过ulimit -u可对单个用户可用的进程资源数进行设置
+操作：
+修改/etc/security/limits.conf,增加如下内容
+
+#how many processes an user can run at any point of time.A soft limit is like a warning and hard limit is a real max limit.
+*        hard    nproc           5000
+*        soft    nproc           3000
+
+2.pid_max设置
+当发现运行的进程总数超过系统支持的进程数限制时，就需要通过增大kernel.pid_max参数来确保业务的正常运行。
+
+操作：
+查看当前配置：
+cat /proc/sys/kernel/pid_max
+
+修改/etc/security/limits.conf,增加如下内容
+#the maximum numerical PROCESS IDENTIFIER than can be assigned by the kernel.
+kernel.pid_max = 655360

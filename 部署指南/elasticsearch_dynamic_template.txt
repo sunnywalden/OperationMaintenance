@@ -1,0 +1,41 @@
+PUT /joy_dmv2
+{
+    "order": 0,
+    "template": "jc*",
+    "settings": {},
+    "mappings": {
+        "logs": {
+            "dynamic_templates": [
+                {
+                "longs_as_long": {
+                     "match_mapping_type": "long",
+                     "mapping": {
+                     "type": "long"
+                     }
+                }}, 
+                 {
+                "date_as_date": {
+                     "match_mapping_type": "date",
+                     "mapping": {
+                     "type": "date"
+                     }
+                }}, 
+                {
+                "Time": {
+                      "match":              "*Time", 
+                      "unmatch":            "repeatTime",
+                      "match_mapping_type": "string",
+                      "mapping": {
+                          "type":           "date"
+                          }
+                }},
+                                 {
+                "string_as_text": {
+                     "match_mapping_type": "string",
+                     "mapping": {
+                     "type": "keyword",
+                     "index": true
+                     }
+                }}
+            ]
+}}}

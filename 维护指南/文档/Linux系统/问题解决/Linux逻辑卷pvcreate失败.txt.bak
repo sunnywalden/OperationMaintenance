@@ -1,0 +1,5 @@
+一、pvcreate /dev/sda3命令出错，提示
+
+Device “/dev/sda3” not found (or ignored by filtering)
+
+出错的原因在于使用fdisk修改配置时没有在runlevel 1下进行，重启系统后可解决此问题。

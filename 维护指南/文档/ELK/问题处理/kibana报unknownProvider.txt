@@ -1,0 +1,4 @@
+cannot login to Kibana error: Unknown provider: sessionTimeoutProvider) 
+stop Kibana, 
+be sure no Kibana process is running, 
+then start Kibana again (oro just reboot your server)

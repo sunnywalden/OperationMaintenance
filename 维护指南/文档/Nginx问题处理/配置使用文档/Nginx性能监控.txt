@@ -1,0 +1,10 @@
+Nginx性能监控
+
+地址：
+https://amplify.nginx.com/overview/
+
+用户名：
+bo.zhang@jcmob.net
+
+密码：
+walden0517

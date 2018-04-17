@@ -1,0 +1,28 @@
+#/bin/bash
+## script for moniter the user actived rate
+
+
+#查询ES
+curl -s -g -Xget "http://10.61.8.15:9200/logstash-*/logs/_search?q=(appid:1179908959)AND(log_type:(clickNumber|advAckAllNumber))AND(@timestamp:[2018-01-01T00:00:00.000Z%20TO%202018-01-01T22:23:59.999Z])?pretty"  -d'
+{
+          "size": 0,
+          "aggs": {
+                "group_by_logtype": {
+                  "terms": {
+                      "field": "log_type.keyword" 
+                       }
+                  }
+    }
+}
+'  >> /tmp/test
+
+
+#取到查询的回调和点击量
+n=`grep -o "key" /tmp/test | wc -l` && let m=$n && for((i=0; i<${m}; i++));do cat /tmp/test|jj aggregations.group_by_logtype.buckets[${i}].doc_count;done
+
+#得到结果,只返回激活率
+i=`cat /tmp/test|jj aggregations.group_by_logtype.buckets.1.doc_count` &&  j=`cat /tmp/test|jj aggregations.group_by_logtype.buckets.0.doc_count` &&letm=${i} && let n=${j} && awk 'BEGIN{printf "%.5f%\n",('$m'/'$n')*100}'
+
+
+
+

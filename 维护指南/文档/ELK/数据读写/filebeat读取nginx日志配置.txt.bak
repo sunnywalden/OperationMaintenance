@@ -1,0 +1,24 @@
+
+##filebeat配置文件从头读取
+1.停止filebeat
+2.删除registry文件
+
+
+
+
+
+##filebeat配置如下
+##说明过滤掉管理平台/api和/static接口的日志
+
+# grep -v '#' /etc/filebeat/filebeat.yml|grep -v '^$'
+filebeat.modules:
+- module: nginx
+  access:
+      enabled: true
+      var.paths: [ "/opt/nginx/logs/access.log" ]
+      prospector:
+          include_lines: ["GET /a/", "GET /c/"]
+          exclude_lines: ["GET /api/", "GET /static/"]
+    
+output.elasticsearch:
+  hosts: ["10.25.193.101:9500"]

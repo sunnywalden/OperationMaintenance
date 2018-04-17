@@ -1,0 +1,202 @@
+#create hive external table
+
+use jc_online;
+add jar /usr/local/hadoop/elasticsearch-hadoop-5.6.0/dist/elasticsearch-hadoop-5.6.0.jar;
+
+
+drop table 0101jconline;
+drop table 0101jconlinesnappy;
+drop table 0101jconlinesnappytemp;
+
+## preload data to plain text file 
+
+CREATE EXTERNAL TABLE IF NOT EXISTS 0101jconlinesnappytemp (
+    Stamp string,
+    host string,
+    sourceId bigint,
+    callAdvTime string,
+    orderId bigint,
+    orderInputId bigint,
+    channelType string,
+    source string,
+    userid string,
+    uuid string,
+    from_ip string,
+    delMode string,
+    log_type string,
+    repeatTime bigint,
+    client_ip string,
+    scid string,
+    responseMsg string,
+    orderSourceId bigint,
+    channelTime string,
+    advId bigint,
+    ideaId bigint,
+    port bigint,
+    appid string,
+    proId bigint,
+    status bigint,
+    cid string,
+    delPlat string,
+    landingPageId bigint,
+    clickTime string,
+    sc_name string,
+    channelMoney float,
+    inputMoney float,
+    notifyChannelUrl string,
+    callAdvUrl string,
+    callChannelUrl string
+    )
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY ' '
+    stored as TEXTFILE;
+
+SET hive.exec.compress.output=true; 
+SET mapred.compress.map.output=true; 
+SET mapred.output.compress=true; 
+SET mapred.output.compression=org.apache.hadoop.io.compress.SnappyCodec; 
+SET mapred.output.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+set mapred.output.compression.type=BLOCK;
+SET io.compression.codecs=org.apache.hadoop.io.compress.SnappyCodec; 
+
+
+alter table 0101jconlinesnappytemp SET SERDEPROPERTIES('serialization.null.format' = 'null');
+
+
+
+
+#load data to seq type file that support muti-worker for mr
+
+
+drop table 0101jconlinesnappy;
+CREATE EXTERNAL TABLE IF NOT EXISTS 0101jconlinesnappy (
+    Stamp string,
+    host string,
+    sourceId bigint,
+    callAdvTime string,
+    orderId bigint,
+    orderInputId bigint,
+    channelType string,
+    source string,
+    userid string,
+    uuid string,
+    from_ip string,
+    delMode string,
+    log_type string,
+    repeatTime bigint,
+    client_ip string,
+    scid string,
+    responseMsg string,
+    orderSourceId bigint,
+    channelTime string,
+    advId bigint,
+    ideaId bigint,
+    port bigint,
+    appid string,
+    proId bigint,
+    status bigint,
+    cid string,
+    delPlat string,
+    landingPageId bigint,
+    clickTime string,
+    sc_name string,
+    channelMoney float,
+    inputMoney float,
+    notifyChannelUrl string,
+    callAdvUrl string,
+    callChannelUrl string
+    )
+    COMMENT 'snappyjc log details'
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY ' '
+    stored as SEQUENCEFILE;
+
+alter table 0101jconlinesnappy SET SERDEPROPERTIES('serialization.null.format' = 'null');
+
+
+
+#插入数据
+
+
+############
+
+#Something very important
+
+#Please replase the path 'hdfs:/online_backup/2018-01-01/logstash-2018-01-01.log.snappy' in your need
+
+#############
+
+
+LOAD DATA INPATH 'hdfs:/online_backup/2018-01-01/logstash-2018-01-01.log.snappy' OVERWRITE INTO TABLE 0101jconlinesnappytemp;
+
+
+select count(*) from 0101jconlinesnappytemp;
+
+insert into table 0101jconlinesnappy  select * from 0101jconlinesnappytemp;
+
+select count(*) from 0101jconlinesnappy;
+
+
+
+  
+  
+  
+  
+#hive 数据写入es,通过elasticsearch-hadoop插件实现
+#load es-hadoop first
+
+add jar /usr/local/hadoop/elasticsearch-hadoop-5.6.0/dist/elasticsearch-hadoop-5.6.0.jar;
+
+
+##write hive data to es
+
+
+#index name add log_type
+
+drop table 0101jconlinev3;
+CREATE EXTERNAL TABLE IF NOT EXISTS 0101jconlinev3 (
+    Stamp string,
+    host string,
+    sourceId bigint,
+    callAdvTime string,
+    orderId bigint,
+    orderInputId bigint,
+    channelType string,
+    source string,
+    userid string,
+    uuid string,
+    from_ip string,
+    delMode string,
+    log_type string,
+    repeatTime bigint,
+    client_ip string,
+    scid string,
+    responseMsg string,
+    orderSourceId bigint,
+    channelTime string,
+    advId bigint,
+    ideaId bigint,
+    port bigint,
+    appid string,
+    proId bigint,
+    status bigint,
+    cid string,
+    delPlat string,
+    landingPageId bigint,
+    clickTime string,
+    sc_name string,
+    channelMoney float,
+    inputMoney float,
+    notifyChannelUrl string,
+    callAdvUrl string,
+    callChannelUrl string
+    )
+    STORED BY 'org.elasticsearch.hadoop.hive.EsStorageHandler'
+    TBLPROPERTIES('es.resource' = 'jc-online-{channeltype}-{log_type}-{stamp|yyyy.MM.dd}/logs', 'es.nodes'='192.168.1.155','es.read.metadata' = 'true','es.field.read.empty.as.null' ='true','es.index.read.missing.as.empty'='true');
+
+select count(*) from 0101jconlinev3;
+
+insert into table 0101jconlinev3 select * from 0101jconlinesnappy;
+select count(*) from 0101jconlinev3;
+
+

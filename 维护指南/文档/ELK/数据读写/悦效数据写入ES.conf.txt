@@ -1,0 +1,226 @@
+input {
+  tcp {
+    host => "0.0.0.0" 
+    port => 9250
+    mode => "server"
+    tags => ["tags"]
+    codec => json_lines
+  }
+
+}
+
+filter {
+   if ![log_type] {
+     drop {}
+   }
+ruby {   
+   code => "event.set('timestamp',event.get('@timestamp').time.localtime)"   
+ }  
+ ruby {  
+   code => "event.set('@timestamp',event.get('timestamp'))"  
+ }  
+ mutate {  
+   remove_field => ["timestamp"]  
+ }
+#  date { 
+#     locale => "zh-CN"
+#      timezone => "Asia/Shanghai" 
+#     match => [ "clickTime", "yyyy-MM-dd HH:mm:ssZ" ]  
+#     target => "clickTime"  
+#     add_tag => [ "tmatch" ]  
+#  } 
+#  date {  
+#     locale => "zh-CN"
+#      timezone => "Asia/Shanghai"
+#     match => [ "callAdvTime", "yyyy-MM-dd HH:mm:ssZ" ]  
+#     target => "callAdvTime"  
+#     add_tag => [ "tmatch" ]  
+#  } 
+#  date {  
+#     locale => "zh-CN"
+#      timezone => "Asia/Shanghai"
+#     match => [ "channelTime", "yyyy-MM-dd HH:mm:ssZ" ]  
+#     target => "clickTime"  
+#     add_tag => [ "tmatch" ]  
+#  } 
+#  date {  
+#     locale => "zh-CN"
+#      timezone => "Asia/Shanghai"
+#     match => [ "noticeChannelTime", "yyyy-MM-dd HH:mm:ssZ" ]  
+#     target => "clickTime"  
+#     add_tag => [ "tmatch" ]  
+#  } 
+}
+
+
+output {
+# stdout{codec =>rubydebug}
+ if [log_type] == "AdvCallback" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-advcallback-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+ }
+
+  if [channelType] == "CPA" {
+    if [log_type] == "ChannelClick" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-channelclick-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "ChannelClickIntercept" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-channelclickintercept-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+
+      }
+    }
+    else if [log_type] == "ChannelCallAdv" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-channelcalladv-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+
+      }
+    }
+    else if [log_type] == "AdvConfirm" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-advconfirm-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "AdvConfirmIntercept" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-advconfirmintercept-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+
+      }
+    }
+    else if [log_type] == "AdvCallChannel" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-advcallchannel-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "AdvCallback" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-advcallback-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "walden" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-a-walden-new-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+     else {
+       stdout { codec=> rubydebug }
+    }
+  }
+  else if [channelType] == "CPC" {
+    if [log_type] == "ChannelClick" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-channelclick-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "ChannelClickIntercept" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-channelclickintercept-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "ChannelCallAdv" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-channelcalladv-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+#  webhdfs {
+#    host => "10.61.8.21"
+#    port => 50070
+#    path => "/logstash/c-channelcalladv/%{+YYYY-MM-dd}/logstash-%{+YYYY-MM-dd}.log"
+#    user => "hadoop"
+#    flush_size => 5125
+#  }
+    }
+    else if [log_type] == "AdvConfirm" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-advconfirm-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "AdvConfirmIntercept" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-advconfirmintercept-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "AdvCallChannel" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-advcallchannel-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "AdvCallback" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-advcallback-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [log_type] == "walden" {
+      elasticsearch {
+      hosts => [""*.*.*.*:9500","*.*.*.*:9500","*.*.*.*:9500"]
+      index => "jc-c-walden-new-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+     else {
+       stdout { codec=> rubydebug }
+    }
+  }
+  else {
+    stdout { codec=> rubydebug }
+  }
+#  file{ path => "/tmp/%{+YYYY-MM-dd}/logstash-%{+YYYY-MM-dd}.log"}
+#  webhdfs {
+#    host => "10.61.8.21"
+#    port => 50070
+#    path => "/es/%{+YYYY-MM-dd}/logstash-%{+YYYY-MM-dd}.log"
+#    user => "hadoop"
+#    flush_size => 5125
+#  }
+}

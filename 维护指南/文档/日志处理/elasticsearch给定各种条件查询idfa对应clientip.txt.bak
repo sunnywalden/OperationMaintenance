@@ -1,0 +1,92 @@
+﻿
+
+
+
+cat advser_ack.csv|while read line
+do
+  ifa=`echo $line|awk -F ',' '{print $4}'`
+    curl -s -g -XGET "http://106.14.240.250:9200/logstash-*/logs/_search?default_operator=AND&q=userid:${ifa}+appid:1228038936+source:mex+log_type:clickNumber+status:0+@timestamp:[2017-12-24T00:00:00.000Z%20TO%202017-12-28T22:00:00.000Z]&_source=userid,cid,client_ip" > /tmp/test1
+    n=`grep -o "_source" /tmp/test1 | wc -l` && let m=$n && for((i=0; i<${m}; i++));do sudo cat /tmp/test1|jj hits.hits.${i}._source ;done >> advser_ack1.log
+done
+
+
+
+curl -s -g -XGET "http://106.14.240.250:9200/logstash-*/logs/_search?q=(appid:1235504705 and appid:12355047051)AND(log_type:clickNumber and log_type:advAckAllNumber)AND(@timestamp:[2017-12-27T00:00:00.000Z%20TO%202018-01-03T00:00:00.000Z]&_source=userid,client_ip,@timestamp,source,cid,sc_name" -H 'Content-Type: application/json' -d'
+{
+          "aggs": {
+                "group_by_cid": {
+                  "terms": {
+                          "field": "cid.keyword"
+                  },
+          "aggs": {
+                "group_by_userid": {
+                  "terms": {
+                          "field": "userid.keyword"
+                  }
+      }
+    }
+      }
+    }
+}
+'
+
+
+
+cat channel_click.csv|while read line
+do
+  ifa=`echo $line|awk -F ',' '{print $3}'`
+    curl -s -g -XGET "http://106.14.240.250:9200/logstash-*/logs/_search?default_operator=AND&q=userid:${ifa}+appid:1228038936+source:mex+log_type:clickNumber+status:0+@timestamp:[2017-12-24T00:00:00.000Z%20TO%202017-12-28T22:00:00.000Z]&_source=userid,cid,client_ip" > /tmp/test2
+
+    n=`grep -o "_source" /tmp/test2 | wc -l` && let m=$n && for((i=0; i<${m}; i++));do sudo cat /tmp/test2|jj hits.hits.${i}._source ;done >> channel_click1.log
+done
+
+
+for lg in advser_ack1 channel_click1
+
+do 
+cp ${lg}.log ${lg}.csv
+
+sed -i 's/}/}\n/g' ${lg}.csv
+
+#转换为csv
+sed -i 's/{"client_ip":"//g' ${lg}.csv 
+sed -i 's/userid":"//g' ${lg}.csv 
+sed -i 's/cid":"//g' ${lg}.csv 
+
+sed -i 's/"}//g' ${lg}.csv 
+sed -i 's/","/,/g' ${lg}.csv
+
+#去重
+sort -k2n ${lg}.csv | uniq > ${lg}11.csv
+
+cp ${lg}11.csv walden
+
+done
+
+
+#合并写入client_ip信息
+cat advser_ack11.csv|while read line
+do
+  re=$line
+  ifa=`echo $re|awk -F ',' '{print $1}'`
+  cid=`echo $re|awk -F ',' '{print $2}'`
+  client_ip=`echo $re|awk -F ',' '{print $3}'`
+  
+  
+#  grep "${ifa}" advser_ack.csv|grep "${cid}"
+  
+#    ifa='3abe7bc4f94341adb6efd4eb512aa2e4'
+#  cid='48'
+#  client_ip=48,110.180.15.149
+  grep "${ifa}" advser_ack.csv|grep "${cid}"
+  if [ $? -eq 0 ]
+  then
+    rec=`grep "${ifa}" advser_ack.csv|grep "${cid}"`
+    echo $rec','${client_ip} >> advser_ack_final.csv
+  fi
+done
+
+#合并及格式化
+awk -F ',' 'BEGIN { OFS=","} {print $1,$3,$4,$5,$6}' advser_ack_final.csv > advser_ack-final.csv
+
+

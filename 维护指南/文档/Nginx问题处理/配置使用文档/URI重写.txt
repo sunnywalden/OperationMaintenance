@@ -1,0 +1,8 @@
+URI重写：
+如将http://ad.jcmob.net/wall/uc.do?下的所有请求重写到http://agent.jcmob.net/uc.do?
+
+location下配置：
+location ~* /mirror {
+  internal;
+  proxy_pass http://agent_mirror/uc.do?$args;
+}

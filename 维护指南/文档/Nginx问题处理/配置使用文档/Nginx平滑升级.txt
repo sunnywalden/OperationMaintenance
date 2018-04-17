@@ -1,0 +1,75 @@
+﻿
+
+
+原编译参数
+--prefix=/opt/nginx --sbin-path=/opt/nginx/sbin/nginx 
+--conf-path=/opt/nginx/conf/nginx.conf 
+--user=nginx --group=nginx 
+--with-http_ssl_module 
+--with-http_stub_status_module 
+--with-http_gzip_static_module 
+--with-pcre 
+--add-module=/root/nginx_upstream_check_module-0.3.0
+
+
+
+cd /opt/nginx/lib/
+tar -zxvf header-more-nginx-module-v0.33.tar.gz 
+tar -zxvf LuaJIT-2.0.5.tar.gz 
+tar -zxvf lua-nginx-module-v0.10.12rc2.tar.gz 
+tar -zxvf nginx-1.13.8.tar.gz 
+tar -zxvf nginx_upsteam_check_module-v0.3.0.tar.gz 
+
+tar -zxvf ngx_devel_kit-v0.3.1rc1.tar.gz 
+tar -zxvf pcre-8.38.tar.gz 
+tar -zxvf zlib-1.2.11.tar.gz 
+
+
+
+cd ../LuaJIT-2.0.5
+make
+make install
+
+yum install openssl-devel
+
+
+
+cd ../nginx-1.13.8
+
+
+新编译参数
+./configure \
+--user=nginx --group=nginx --prefix=/opt/nginx  \
+--sbin-path=/opt/nginx/sbin/nginx \
+--conf-path=/opt/nginx/conf/nginx.conf \
+--with-http_stub_status_module \
+--with-http_ssl_module \
+--with-http_gzip_static_module \
+--with-http_realip_module \
+--with-http_addition_module \
+--with-pcre=/opt/nginx/lib/pcre-8.38 \
+--with-zlib=/opt/nginx/lib/zlib-1.2.11 \
+--with-ld-opt="-Wl,-rpath,/usr/local/lib/" \
+--add-module=/opt/nginx/lib/ngx_devel_kit-0.3.1rc1 \
+--add-module=/opt/nginx/lib/headers-more-nginx-module-0.33 \
+--add-module=/opt/nginx/lib/lua-nginx-module-0.10.12rc2 \
+--add-module=/opt/nginx/lib/nginx_upstream_check_module-0.3.0
+
+
+
+make
+
+
+
+cp /opt/nginx/sbin/nginx /opt/nginx/sbin/nginx_1.8.1
+
+cp -r objs/nginx /opt/nginx/sbin
+
+make upgrade
+
+
+
+
+
+
+

@@ -1,0 +1,41 @@
+
+  
+  
+  
+  PUT /_cluster/settings
+{
+   "persistent" : {
+     "index.refresh_interval": -1,
+     index.number_of_shards: 5
+   }
+}
+
+
+
+
+
+ES优化
+
+yaml配置文件参数调整
+action.destructive_requires_name:true
+
+index.refresh_interval: -1
+index.number_of_shards: 5
+index.number_of_replicas: 0
+index.translog.sync_interval: 30s
+index.translog.durability: async
+index.translog.flush_threshold_size: 4g
+index.translog.flush_threshold_ops: 50000
+
+indices.cache.filter.size: 30%
+indices.fielddata.cache.size: 60%
+index.cache.field.type: soft
+indices.breaker.fielddata.limit: 70%
+
+
+
+
+
+合并
+# reduce the number of segments a Lucene index holds within each shard by merging them
+POST logstash-*/_forcemerge

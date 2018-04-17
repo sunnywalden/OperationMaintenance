@@ -1,0 +1,13 @@
+#!/bin/bash
+##ÅúÁ¿É¾³ýESË÷Òý
+
+
+for i in jc- . logstash-
+do
+  idx = ${i}
+##Please ensure that you should list all of the indices that you wanna keep with 'grep -v' below 
+curl -Xget http://127.0.0.1:9200/_cat/indices/${idx}*|grep -v .kibana|grep -v .watches|grep -v .monitoring-alerts-6|grep -v .triggered_watches|awk '{print $3}' > index.txt
+
+cat index.txt |while read line;do ind=${line};curl -XDELETE "127.0.0.1:9200/${ind}?pretty";done;curl -Xget "127.0.0.1:9200/_cat/indices"
+done
+

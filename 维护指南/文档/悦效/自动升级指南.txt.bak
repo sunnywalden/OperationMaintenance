@@ -1,0 +1,64 @@
+生产环境升级指南：
+
+一、准备工作
+1.准备war或jar包
+
+描述：请将A渠道、C渠道、管理平台的war包或新平台传输、管理端的jar包准备好
+
+要求：打包时不要包含wall字样的文件夹，直接将有wall字样的文件夹下的所以文件打包即可。
+
+2.通过xmanager（或putty与filezilla）登录到190服务器
+
+3.
+1)老平台
+将A渠道的war包以sftp方式上传到190服务器的/srv/salt/a_tomcatcas/files路径下；
+将C渠道的war包以sftp方式上传到190服务器的/srv/salt/c_tomcatcas/files路径下;
+将管理平台的war包以sftp方式上传到190服务器的/srv/salt/mgr/files路径下;
+
+2）新平台
+将新平台传输的jar包以sftp方式上传到190服务器的/srv/salt/joyplus/files路径下;
+将新平台管理端的jar包以sftp方式上传到190服务器的/srv/salt/joyplusmanage/files路径下;
+
+
+二、升级
+
+1.老平台全量升级
+
+cd /srv/salt/ &&  salt 'server*' state.highstate
+
+2.老平台指定渠道升级
+通过特别指定sls文件来执行
+
+1）A渠道升级
+salt 'server2' state.sls a_tomcatcas
+salt 'server3' state.sls a_tomcatcas
+
+2）C渠道升级
+salt 'server1' state.sls c_tomcatcas
+salt 'server3' state.sls c_tomcatcas
+
+3）管理平台升级
+salt 'server1' state.sls mgr
+
+
+
+
+3.新平台指定主机升级
+通过特别指定sls文件来执行
+
+1）190主机升级
+salt 'server1' state.sls joyplus
+
+2）250主机升级
+salt 'server2' state.sls joyplus
+
+3）149主机升级
+salt 'server3' state.sls joyplus
+
+4）hadoop1主机升级
+salt 'server3' state.sls joyplus
+
+5）新平台管理平台升级
+salt 'server2' state.sls joyplusmanage
+
+三、检查服务状态 

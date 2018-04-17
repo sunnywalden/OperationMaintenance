@@ -1,0 +1,111 @@
+﻿ES查询案例
+
+
+http://10.61.8.15:9200/jc-*/logs/_search?default_operator=AND&q=appid:1179908959+channelType:CPC+@timestamp:[2018-01-02T00:00:00.000Z TO 2018-01-02T22:23:59.999Z]
+
+
+curl -s -g -Xget "http://10.61.8.15:9200/jc-*/logs/_search?q=(appid:1179908959)AND(channelType:CPC)AND(@timestamp:[2018-01-02T00:00:00.000Z%20TO%202018-01-02T22:23:59.999Z])AND(log_type:ChannelClick and log_type:advAckAllNumber)?pretty"
+
+#指定字段值统计
+curl -Xget "http://10.61.8.15:9200/logstash-*/logs/_search" -H 'Content-Type: application/json' -d'
+{
+          "size": 0,
+          "aggs": {
+                "group_by_logtype": {
+                  "terms": {
+                          "field": "log_type.keyword"
+                  }
+      }
+    }
+}
+'
+
+  
+#统计指定字段log_tpye指定值clickNumber|advAckAllNumber的量
+curl -s -g -Xget "http://10.61.8.15:9200/logstash-*/logs/_search?q=(appid:1179908959)AND(log_type:(clickNumber|advAckAllNumber))AND(@timestamp:[2018-01-01T00:00:00.000Z%20TO%202018-01-01T22:23:59.999Z])?pretty"  -d'
+{
+          "size": 0,
+          "aggs": {
+                "group_by_logtype": {
+                  "terms": {
+                      "field": "log_type.keyword" 
+                       }
+                  }
+    }
+}
+'
+  
+ 
+ 
+ #统计状态字段各值占比
+curl -s -g -Xget "http://10.61.8.15:9200/logstash-*/logs/_search?q=(appid:1179908959)AND(log_type:(clickNumber|advAckAllNumber))AND(@timestamp:[2018-01-01T00:00:00.000Z%20TO%202018-01-01T22:23:59.999Z])?pretty"  -d'
+{
+          "size": 0,
+
+      "aggs" : {
+        "log_types" : {
+          "percentile_ranks" : {
+            "field" : "status",
+            "values" : [0, 2， 3]
+          }
+        }
+      }
+}
+'
+
+
+#统计某字段各值频度
+curl -s -g -Xget "http://10.61.8.15:9200/logstash-*/logs/_search?q=(appid:1179908959)AND(log_type:(clickNumber|advAckAllNumber))AND(@timestamp:[2018-01-01T00:00:00.000Z%20TO%202018-01-01T22:23:59.999Z])?pretty"  -d'
+{
+          "size": 0,
+          "aggs": {
+                "significant_logtype": {
+                  "significant_terms": {
+                      "field": "log_type.keyword",
+                      "min_doc_count": 1
+                       }
+                  }
+    }
+}
+'
+
+
+
+
+#标准query string格式查询
+curl -g -Xget "http://10.61.8.15:9200/logstash-*/logs/_search" -H 'Content-Type: application/json' -d'
+{
+          "size": 0,
+          "query" : {
+            "bool": {
+                "filter": [
+                    {
+                       "range": {
+                         "@timestamp": {
+                           "gte": "2018-01-01 00:00:00.000Z",
+                           "lt": "2018-01-02 00:00:00.000Z",
+                           "format": "yyyy-MM-dd HH:mm:ss.SSSZ"
+                          }
+                        }
+                    },
+                    {
+                         "match": { "appid": "1179908959" }
+                    },
+                    {
+                         "regexp": { "log_type": "clickNumber|advAckAllNumber" }
+                    }
+                ]
+            }
+          },
+          "aggs": {
+                "group_by_logtype": {
+                  "terms": {
+                          "field": "log_type.keyword"
+                  }
+      }
+    }
+}
+'
+
+
+

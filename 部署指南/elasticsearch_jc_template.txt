@@ -1,0 +1,131 @@
+{
+  "joy_v14": {
+    "order": 0,
+    "template": "*",
+    "settings": {
+      "index": {
+        "number_of_shards": "5",
+        "number_of_replicas": "1"
+      }
+    },
+    "mappings": {
+      "logs": {
+        "dynamic": "false",
+        "properties": {
+          "sourceId": {
+            "type": "long"
+          },
+          "callAdvTime": {
+            "type": "date"
+          },
+          "orderId": {
+            "type": "long"
+          },
+          "orderInputId": {
+            "type": "long"
+          },
+          "channelType": {
+            "type": "keyword"
+          },
+          "source": {
+            "type": "keyword"
+          },
+          "landingPageId": {
+            "type": "keyword"
+          },
+          "uuid": {
+            "type": "keyword"
+          },
+          "from_ip": {
+            "type": "ip"
+          },
+          "delMode": {
+            "type": "keyword"
+          },
+          "log_type": {
+            "type": "keyword"
+          },
+          "repeatTime": {
+            "type": "long"
+          },
+          "@version": {
+            "type": "long"
+          },
+          "host": {
+            "type": "keyword"
+          },
+          "client_ip": {
+            "type": "ip"
+          },
+          "noticeChannelTime": {
+            "type": "date"
+          },
+          "logger_name": {
+            "type": "keyword"
+          },
+          "scid": {
+            "type": "keyword"
+          },
+          "responseMsg": {
+            "type": "keyword"
+          },
+          "level": {
+            "type": "keyword"
+          },
+          "channelTime": {
+            "type": "date"
+          },
+          "advId": {
+            "type": "long"
+          },
+          "clickTime": {
+            "type": "date"
+          },
+          "message": {
+            "type": "keyword"
+          },
+          "callAdvUrl": {
+            "type": "keyword"
+          },
+          "ideaId": {
+            "type": "keyword"
+          },
+          "tags": {
+            "type": "keyword"
+          },
+          "@timestamp": {
+            "type": "date"
+          },
+          "port": {
+            "type": "long"
+          },
+          "level_value": {
+            "type": "long"
+          },
+          "thread_name": {
+            "type": "keyword"
+          },
+          "appid": {
+            "type": "keyword"
+          },
+          "proId": {
+            "type": "long"
+          },
+          "callChannelUrl": {
+            "type": "keyword"
+          },
+          "delPlat": {
+            "type": "keyword"
+          },
+          "cid": {
+            "type": "keyword"
+          },
+          "status": {
+            "type": "long"
+          }
+        }
+      }
+    },
+    "aliases": {}
+  }
+}

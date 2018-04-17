@@ -1,0 +1,113 @@
+#!/bin/bash
+
+
+##  方法一
+
+
+#localhost_access_log.2017-11-29.txt
+
+#1.取idfa
+cat /opt/idfa.csv |while read line
+do
+  ifa=$line
+
+  #2.匹配点击日志
+  for logf in '11-29' '11-30' '12-01' '12-02' '12-03' '12-04'
+  do
+    grep "appid=12918070042[ ]*[&cid=]*\w*[&mac=]*\w*[&clientIp=]*\w*[.]*\w*[.]*\w*[.]*\w*[&redirect=]*\w*[&os=]*\w*&idfa=${ifa}" /opt/tomcatcas*/logs/localhost_access_log.2017-${logf}.txt|awk -F 'uc.do?' '{print $2}'|awk -F '&callback=' '{print $1}' >> /tmp/tmp.log
+  done
+  echo 'We have done here'
+done
+  #3.过滤处理
+  #抽取appid source cid idfa
+  #4.存入csv文件
+
+cd /tmp && rm -rf tep.log source.csv cid.csv idfa.csv new.log final.csv
+cp -r /tmp/tmp.log /tmp/tep.log 
+
+sed -i 's/&/,/g' /tmp/tep.log
+sed -i 's/?source/source/g' /tmp/tep.log
+
+awk '{match($0,/(source=\w*)/,a);print a[1]}' /tmp/tep.log >> /tmp/source.csv
+
+awk '{match($0,/(idfa=\w*[-]\w*[-]\w*[-]\w*[-]\w*)/,a);print a[1]}' /tmp/tep.log >> /tmp/idfa.csv
+
+
+awk '{match($0,/(cid=\w*)/,a);print a[1]}' /tmp/tep.log > /tmp/cid.csv
+
+
+paste -d  -s /tmp/idfa.csv /tmp/source.csv >> /tmp/new.log
+
+sed -i 's/-source/,source/g' /tmp/new.log 
+
+
+paste -d  -s /tmp/new.log /tmp/cid.csv >> /tmp/final.csv
+
+sed -i 's/,-/,,/g' /tmp/final.csv 
+sed -i 's/-cid/,cid/g' /tmp/final.csv 
+mv final.csv `ifconfig|grep inet|grep -v 127.0.0.1|grep -v 10.2|awk '{print $2}'|awk -F '.' '{print $4}'`.csv
+
+cd /tmp && scp root@server2:/tmp/250.csv ./
+cd /tmp && scp root@server3:/tmp/149.csv ./
+
+
+sed -i 's/idfa=//g' /tmp/*.csv
+
+sed -i 's/source=//g' /tmp/*.csv 
+
+sed -i 's/cid=//g' /tmp/*.csv 
+
+sed -i 's/-$//g' /tmp/*.csv 
+
+#windows diffuse合并文件
+
+#linux去重
+sort -k2n 1222_1535.csv | uniq > final.csv
+
+
+
+
+##  方法二
+
+
+## shell script
+
+#!/bin/bash
+
+
+cat /opt/elk/logstash-5.6/logstash-5.6.0/光荣使命-idfa-1129-1203.csv|while read line
+do
+  ifa=${line}
+
+    curl -s -XGET "http://10.61.8.15:9200/jc-filebeats-2017.12.22/log/_search?q=idfa.keyword:${ifa}&_source=mysource,idfa,cid" > /tmp/test
+    n=`grep -o "_source" /tmp/test | wc -l` && let m=$n && for((i=0; i<${m}; i++));do sudo cat /tmp/test|jj hits.hits.${i}._source >> /tmp/middle.log;done 
+done
+
+
+echo 'We done here'
+echo '------------------------------------------------------------------------------------'
+
+
+
+##  格式处理
+
+
+#增加换行
+sed -i 's/}/}\n/g' /tmp/middle.log
+
+#转换为csv
+sed -i 's/{"mysource":"//g' /tmp/middle.log 
+sed -i 's/idfa":"//g' /tmp/middle.log 
+sed -i 's/"}//g' /tmp/middle.log 
+sed -i 's/","/,/g' /tmp/middle.log
+
+mv /tmp/middle.log /tmp/idfa_final.csv
+
+sed -i 's/cid":"//g' /tmp/idfa_final.csv
+
+
+awk -F ',' '{print $2","$1","$3}' /tmp/idfa_final.csv  > /tmp/final.csv
+
+
+#去重
+sort -k2n /tmp/final.csv | uniq > /tmp/_idfa.csv

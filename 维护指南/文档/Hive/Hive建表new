@@ -1,0 +1,214 @@
+#create hive external table
+
+use jc_online;
+drop table snappytempjc;
+add jar /usr/local/hadoop/elasticsearch-hadoop-5.6.0/dist/elasticsearch-hadoop-5.6.0.jar;
+
+CREATE EXTERNAL TABLE IF NOT EXISTS snappytempjc (
+    Stamp string,
+    host string,
+    sourceId bigint,
+    callAdvTime string,
+    orderId bigint,
+    orderInputId bigint,
+    channelType string,
+    source string,
+    uuid string,
+    fromip string,
+    delMode string,
+    logtype string,
+    repeatTime bigint,
+    clientip string,
+    scid string,
+    responseMsg string,
+    orderSourceId bigint,
+    level string,
+    channelTime string,
+    advId bigint,
+    ideaId bigint,
+    port bigint,
+    threadname string,
+    levelvalue bigint,
+    appid string,
+    proId bigint,
+    status bigint,
+    cid string,
+    delPlat string,
+    landingPageId bigint,
+    clickTime string,
+    scname string,
+    channelMoney float,
+    inputMoney float,
+    notifyChannelUrl string,
+    callAdvUrl string,
+    callChannelUrl string
+    )
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY ' '
+    stored as TEXTFILE;
+SET hive.exec.compress.output=true; 
+SET mapred.compress.map.output=true; 
+SET mapred.output.compress=true; 
+SET mapred.output.compression=org.apache.hadoop.io.compress.SnappyCodec; 
+SET mapred.output.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+set mapred.output.compression.type=BLOCK;
+SET io.compression.codecs=org.apache.hadoop.io.compress.SnappyCodec; 
+    
+    set hive.exec.compress.intermediate=true;
+
+    set hive.intermediate.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+
+    set hive.intermediate.compression.type=BLOCK;
+
+
+alter table snappytempjc SET SERDEPROPERTIES('serialization.null.format' = 'null');
+
+
+
+
+
+drop table snappyjc;
+CREATE EXTERNAL TABLE IF NOT EXISTS snappyjc (
+    Stamp string,
+    host string,
+    sourceId bigint,
+    callAdvTime string,
+    orderId bigint,
+    orderInputId bigint,
+    channelType string,
+    source string,
+    uuid string,
+    fromip string,
+    delMode string,
+    logtype string,
+    repeatTime bigint,
+    clientip string,
+    scid string,
+    responseMsg string,
+    orderSourceId bigint,
+    level string,
+    channelTime string,
+    advId bigint,
+    ideaId bigint,
+    port bigint,
+    threadname string,
+    levelvalue bigint,
+    appid string,
+    proId bigint,
+    status bigint,
+    cid string,
+    delPlat string,
+    landingPageId bigint,
+    clickTime string,
+    scname string,
+    channelMoney float,
+    inputMoney float,
+    notifyChannelUrl string,
+    callAdvUrl string,
+    callChannelUrl string
+    )
+    COMMENT 'snappyjc log details'
+    ROW FORMAT DELIMITED
+    FIELDS TERMINATED BY ' '
+    stored as SEQUENCEFILE;
+    SET hive.exec.compress.output=true; 
+    SET mapred.compress.map.output=true; 
+    SET mapred.output.compress=true; 
+    SET mapred.output.compression=org.apache.hadoop.io.compress.SnappyCodec; 
+    SET mapred.output.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+    SET mapred.output.compression.type=BLOCK;
+    SET io.compression.codecs=org.apache.hadoop.io.compress.SnappyCodec;
+    
+    set hive.exec.compress.intermediate=true;
+
+    set hive.intermediate.compression.codec=org.apache.hadoop.io.compress.SnappyCodec;
+
+    set hive.intermediate.compression.type=BLOCK;
+
+alter table snappyjc SET SERDEPROPERTIES('serialization.null.format' = 'null');
+
+
+#复制数据(hadoop命令)
+hadoop fs -cp -f /online_backup/2018-04-12 /tmp/
+
+
+#插入数据
+
+
+
+LOAD DATA INPATH '/tmp/2018-04-12/jc-a-advconfirm-2018.04.12.log.snappy' OVERWRITE INTO TABLE snappytempjc;
+
+
+select count(*) from snappytempjc;
+
+insert into table snappyjc  select * from snappytempjc;
+
+
+
+
+
+  
+  
+  
+  
+#hive 数据写入es
+#通过elasticsearch-hadoop插件实现
+
+add jar /usr/local/hadoop/elasticsearch-hadoop-5.6.0/dist/elasticsearch-hadoop-5.6.0.jar;
+
+
+
+
+drop table esjc;
+CREATE EXTERNAL TABLE IF NOT EXISTS esjc (
+    Stamp string,
+    host string,
+    sourceId bigint,
+    callAdvTime string,
+    orderId bigint,
+    orderInputId bigint,
+    channelType string,
+    source string,
+    uuid string,
+    fromip string,
+    delMode string,
+    logtype string,
+    repeatTime bigint,
+    clientip string,
+    scid string,
+    responseMsg string,
+    orderSourceId bigint,
+    level string,
+    channelTime string,
+    advId bigint,
+    ideaId bigint,
+    port bigint,
+    threadname string,
+    levelvalue bigint,
+    appid string,
+    proId bigint,
+    status bigint,
+    cid string,
+    delPlat string,
+    landingPageId bigint,
+    clickTime string,
+    scname string,
+    channelMoney float,
+    inputMoney float,
+    notifyChannelUrl string,
+    callAdvUrl string,
+    callChannelUrl string
+    )
+    STORED BY 'org.elasticsearch.hadoop.hive.EsStorageHandler'
+    TBLPROPERTIES('es.resource' = 'jc-history-es-{channelType}-{logtype}/logs', 'es.nodes'='192.168.1.155','es.read.metadata' = 'true','es.field.read.empty.as.null' ='true');
+
+
+
+
+
+   insert into table esjc select * from snappyjc;
+
+
+
+
+

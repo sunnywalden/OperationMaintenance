@@ -1,0 +1,18 @@
+http://106.14.240.250:9200/logstash-*/logs/_search?default_operator=AND&q=userid:7da1f911c19b4a04a33b1efe3160beef+appid:1228038936+source:mex+log_type:clickNumber+status:0+@timestamp:[2017-12-24T00:00:00.000Z%20TO%202017-12-28T22:00:00.000Z]&_source=userid,cid,client_ip
+
+curl -XGET "http://106.14.240.250:9200/logstash-*/logs/_search?default_operator=AND&q=@timestamp:[2017-12-24T00:00:00.000Z TO 2017-12-28T22:00:00.000Z]+userid:${ifa}+appid:1228038936+source:mex+log_type:clickNumber+status:0&_source=userid,cid,client_ip" > /tmp/test1
+
+
+
+
+get logstash-*/logs/_search?q=(appid:1179908959)AND(log_type:(clickNumber|advAckAllNumber))AND(@timestamp:[2018-01-01T00:00:00.000Z%20TO%202018-01-01T22:23:59.999Z])
+{
+          "size": 0,
+          "aggs": {
+                "group_by_logtype": {
+                  "terms": {
+                      "field": "log_type.keyword" 
+                       }
+                  }
+    }
+}

@@ -1,0 +1,7 @@
+问题：kibana无法启动，报“Optimizing and caching bundles for kibana, stateSessionStorageRedirect, timelion and status_page. This may take a few minutes”
+
+
+解决办法：
+卸载插件导致的权限问题
+chown -R kibana:kibana /opt/kibana/optimize/bundles
+chmod g+s /opt/kibana/optimize/bundles
