@@ -2,7 +2,7 @@ input{
      jdbc {
          jdbc_driver_library => "/usr/share/java/mysql-connector-java.jar"
          jdbc_driver_class => "com.mysql.jdbc.Driver"
-         jdbc_connection_string => "jdbc:mysql://rr-uf679x6htmz1800qg0o.mysql.rds.aliyuncs.com:3306/advcas"
+         jdbc_connection_string => "jdbc:mysql://rm-uf6731vc9ifc8m0yqo.mysql.rds.aliyuncs.com:3306/advcas"
          jdbc_user => "casroot"
          jdbc_password => "xka3kCasroot"
          jdbc_paging_enabled => "true"
@@ -18,6 +18,7 @@ input{
          last_run_metadata_path => "/tmp/channel_call_adv_last_id"
          clean_run => "false"
          lowercase_column_names => "false" 
+         type => "callAdvNumber"
        } 
 }
 
@@ -34,20 +35,13 @@ filter {
 #        rename => ["callAdvUrl", "callAdvUrl"]
         rename => ["lastResponseMsg", "responseMsg"]
         rename => ["insertTime", "callAdvTime"]
-        replace => { "type" => "callAdvNumber" }
-#        add_field => { "type" => "callAdvNumber" }
+#        replace => { "type" => "callAdvNumber" }
   }
 }
  
 output{
      if [type] == "callAdvNumber" {
-#       elasticsearch {
-#           hosts => ["10.81.128.213:9500","10.81.128.114:9500","10.81.128.163:9500"]
-#           index => "jc-history-channelcalladv-%{+YYYY.MM.dd}"
-#           manage_template => false
-#           template_name => "joy_dm2"
-#           document_id => "%{id}"
-#       }
+        file { path => "/tmp/test.log" }
         webhdfs {
            host => "192.168.1.83"
            port => 50070

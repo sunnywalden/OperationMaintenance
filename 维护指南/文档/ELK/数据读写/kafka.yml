@@ -1,0 +1,123 @@
+input {
+  kafka {
+    bootstrap_servers => "192.168.1.128:9092"
+    topics => ["ChannelClick"]
+#    topics => ["test"]
+    id => "kafaka-click"
+#    auto_offset_reset => "latest"
+    auto_offset_reset => "earliest"
+    consumer_threads => 5
+    codec => "json"
+    type => "kafka"
+  }
+}
+
+filter {
+   if ![logType] {
+     drop {}
+   }
+#ruby {   
+#   code => "event.set('timestamp',event.get('@timestamp').time.localtime)"   
+# }  
+# ruby {  
+#   code => "event.set('@timestamp',event.get('timestamp'))"  
+# }  
+ mutate {  
+#   remove_field => ["timestamp"]  
+
+## valid until 6.0
+#    copy => { "[@metadata][kafka][offset]" => "kafka_offset" }
+  }
+}
+
+
+output {
+ if [type] == "kafka" { 
+  if [logType] == "AdvCallback" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-advcallback-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+  if [channelType] == "CPA" {
+    if [logType] =~ "ChannelClick|ChannelClickIntercept" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-a-channelclick-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [logType] == "ChannelCallAdv" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-a-channelcalladv-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+
+      }
+    }
+    else if [logType] =~ "AdvConfirm|AdvConfirmIntercept" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-a-advconfirm-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [logType] == "AdvCallChannel" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-a-advcallchannel-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+     else {
+       stdout { codec=> rubydebug }
+    }
+  }
+  else if [channelType] == "CPC" {
+    if [logType] =~ "ChannelClick|ChannelClickIntercept" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-c-channelclick-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [logType] == "ChannelCallAdv" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-c-channelcalladv-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [logType] =~ "AdvConfirm|AdvConfirmIntercept" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-c-advconfirm-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+    else if [logType] == "AdvCallChannel" {
+      elasticsearch {
+      hosts => ["127.0.0.1:9200"]
+      index => "jc-kafka-c-advcallchannel-%{+YYYY.MM.dd}"
+      manage_template => false
+      template_name => "joy_dm2"
+      }
+    }
+     else {
+       stdout { codec=> rubydebug }
+    }
+  }
+  else {
+    stdout { codec=> rubydebug }
+  }
+ }
+}
