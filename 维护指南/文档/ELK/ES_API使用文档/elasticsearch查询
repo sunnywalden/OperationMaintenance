@@ -1,13 +1,13 @@
 appid=1228038936 AND source=mex AND log_type:callAdvNumber
-ĞèÒª£ºuserid  @timestamp(Í¨Öª¹ã¸æÖ÷Ê±¼ä) host
+éœ€è¦ï¼šuserid  @timestamp(é€šçŸ¥å¹¿å‘Šä¸»æ—¶é—´) host
 group by cid
 
 appid=1228038936 AND source=mex AND log_type:advAckAllNumber
-ĞèÒª£ºuserid host @timestamp(¹ã¸æÖ÷È·ÈÏ)   clickTime
+éœ€è¦ï¼šuserid host @timestamp(å¹¿å‘Šä¸»ç¡®è®¤)   clickTime
 group by cid
 
 (appid:1235504705 and appid:12355047051) AND @timestamp:[2017-12-27T00:00:00.000Z TO 2018-01-03T00:00:00.000Z] AND (log_type:advAckAllNumber and log_type:clickNumber)
-ĞèÒªuserid client_ip @timestamp(¹ã¸æÖ÷È·ÈÏ)  source    sc_name
+éœ€è¦userid client_ip @timestamp(å¹¿å‘Šä¸»ç¡®è®¤)  source    sc_name
 
 
 
@@ -29,7 +29,7 @@ curl -Xget "http://localhost:9200/logstash-*/logs/_search?_source=userid,host,@t
 ' >> first.log
 
 elasticdump \
-  --input=http://106.14.240.250:9200/logstash-* \
+  --input=http://localhost:9200/logstash-* \
   --output=query20.json \
   --searchBody '{"_source": ["userid","host","@timestamp","clickTime","cid"], "query":{"query_string":{"query": "appid=1228038936 AND source=mex AND log_type:advAckAllNumber"}},"aggs": {"group_by_cid": {"terms": {"field": "cid.keyword"}}}}'
 
@@ -39,7 +39,7 @@ cat query20.json |while read line;do rec=${line}; echo $rec | jj _source;done > 
 
 
 elasticdump \
-  --input=http://106.14.240.250:9200/logstash-* \
+  --input=http://localhost:9200/logstash-* \
   --output=query10.json \
   --searchBody '{"_source": ["userid","host","@timestamp","cid"], "query":{"query_string":{"query": "appid=1228038936 AND source=mex AND log_type:callAdvNumber"}},"aggs": {"group_by_cid": {"terms": {"field": "cid.keyword"}}}}'
 
@@ -48,16 +48,16 @@ elasticdump \
 cat query10.json |while read line;do rec=${line}; echo $rec | jj _source;done > channelclick.log
 
 
-##  ¸ñÊ½´¦Àí
+##  æ ¼å¼å¤„ç†
 
 
-#Ôö¼Ó»»ĞĞ
+#å¢åŠ æ¢è¡Œ
 sed -i 's/}/}\n/g' channelclick.log
 
 sed -i 's/}/}\n/g' advserack.log
 
 cp channelclick.log channelclick.csv
-#×ª»»Îªcsv
+#è½¬æ¢ä¸ºcsv
 sed -i 's/{"@timestamp":"//g' channelclick.csv 
 sed -i 's/host":"//g' channelclick.csv 
 sed -i 's/userid":"//g' channelclick.csv 
@@ -66,12 +66,12 @@ sed -i 's/cid":"//g' channelclick.csv
 sed -i 's/"}//g' channelclick.csv 
 sed -i 's/","/,/g' channelclick.csv
 
-#È¥ÖØ
+#å»é‡
 sort -k2n channelclick.csv | uniq > channel_click.csv
 
 
 cp advserack.log advserack.csv
-#×ª»»Îªcsv
+#è½¬æ¢ä¸ºcsv
 sed -i 's/{"@timestamp":"//g' advserack.csv 
 sed -i 's/host":"//g' advserack.csv 
 sed -i 's/clickTime":"//g' advserack.csv 
@@ -81,17 +81,17 @@ sed -i 's/cid":"//g' advserack.csv
 sed -i 's/"}//g' advserack.csv 
 sed -i 's/","/,/g' advserack.csv
 
-#È¥ÖØ
+#å»é‡
 sort -k2n advserack.csv | uniq > advser_ack.csv
 
 
 
 
 
-#Í³¼Æ×Ü¼ÇÂ¼
+#ç»Ÿè®¡æ€»è®°å½•
  wc -l /tmp/_idfa.csv
  
-#Í³¼ÆÓĞĞ§ÓÃ»§Êı
+#ç»Ÿè®¡æœ‰æ•ˆç”¨æˆ·æ•°
 awk -F ',' '{print $1}'  /tmp/_idfa.csv|sort -k1|uniq -u|wc -l
 
 
@@ -147,7 +147,7 @@ curl -Xget "http://localhost:9200/logstash-*/logs/_source=userid,host,@timestamp
 
 
 
-#¶àÌõ¼ş²éÑ¯
+#å¤šæ¡ä»¶æŸ¥è¯¢
 curl -s -XGET "http://localhost:9200/logstash-*/logs/_search?q=appid:1228038936+source:mex+log_type:advAckAllNumber&_source=userid,host,@timestamp" > /tmp/test
 
 
